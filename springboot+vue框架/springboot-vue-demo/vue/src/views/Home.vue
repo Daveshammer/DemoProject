@@ -122,7 +122,7 @@ export default {
           } else {
             this.$message({
               type: "error",
-              message: res.msq
+              message: res.msg
             })
           }
           this.load(); //刷新表格数据
@@ -139,7 +139,7 @@ export default {
           } else {
             this.$message({
               type: "error",
-              message: res.msq
+              message: res.msg
             })
           }
         })

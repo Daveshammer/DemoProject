@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@element-plus/icons-vue": "^2.0.6",
     "@vue/cli": "^5.0.8"
   }
 }
