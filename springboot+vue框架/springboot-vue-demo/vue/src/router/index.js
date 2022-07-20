@@ -14,14 +14,14 @@ const routes = [
                 component: () => import("@/views/User"),
             },
             {
-                path: '/user',
-                name: 'User',
-                component: () => import("@/views/User"),
+                path: '/book',
+                name: 'Book',
+                component: () => import("@/views/Book"),
             },
             {
-                path: '/user',
-                name: 'User',
-                component: () => import("@/views/User"),
+                path: '/person',
+                name: 'Person',
+                component: () => import("@/views/Person"),
             },
 
         ]

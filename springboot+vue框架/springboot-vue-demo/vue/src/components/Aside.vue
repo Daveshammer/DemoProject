@@ -12,9 +12,9 @@
         <el-menu-item index="user">
           <span>用户管理</span>
         </el-menu-item>
-<!--        <el-menu-item index="data">-->
-<!--          <span>数据管理</span>-->
-<!--        </el-menu-item>-->
+        <el-menu-item index="book">
+          <span>书籍管理</span>
+        </el-menu-item>
       </el-sub-menu>
 <!--      <el-menu-item index="2">-->
 <!--        <span>Navigator Two</span>-->
