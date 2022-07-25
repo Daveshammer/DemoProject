@@ -4,10 +4,10 @@
       <div style="color: #cccccc; font-size: 30px; text-align: center; padding: 30px 0">欢迎登录</div>
       <el-form :model="form" size="normal" :rules="rules" ref="form">
         <el-form-item prop="username">
-          <el-input prefix-icon="User" v-model="form.username" />
+          <el-input prefix-icon="UserFilled" v-model="form.username" />
         </el-form-item>
         <el-form-item prop="password">
-          <el-input prefix-icon="el-icon-lock" v-model="form.password" show-password />
+          <el-input prefix-icon="Lock" v-model="form.password" show-password />
         </el-form-item>
         <el-form-item>
           <el-button style="width: 100%" type="primary" @click="login">登 录</el-button>

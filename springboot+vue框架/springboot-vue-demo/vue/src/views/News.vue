@@ -14,25 +14,13 @@
     </div>
     <el-table :data="tableData" border stripe style="width: 100%">
       <el-table-column prop="id" label="ID" sortable/>
-      <el-table-column prop="name" label="书名"/>
-      <el-table-column prop="price" label="单价"/>
+      <el-table-column prop="title" label="标题"/>
       <el-table-column prop="author" label="作者"/>
-      <el-table-column prop="createTime" label="出版时间"/>
-      <el-table-column prop="cover" label="封面">
-        <template #default="scope">
-          <el-image
-              style="width: 100px; height: 100px"
-              :src="scope.row.cover"
-              :preview-src-list="scope.row.cover"
-          />
-        </template>
-      </el-table-column>
+      <el-table-column prop="time" label="时间"/>
       <el-table-column fixed="right" label="操作">
         <template #default="scope">
-          <el-button link type="text" size="mini" @click="handleEdit(scope.row)"
-          >编辑
-          </el-button
-          >
+          <el-button link type="text" size="mini" @click="details(scope.row)">详情</el-button>
+          <el-button link type="text" size="mini" @click="handleEdit(scope.row)">编辑</el-button>
           <el-popconfirm title="确认删除吗？" @confirm="handleDelete(scope.row.id)">
             <template #reference>
               <el-button size="mini" type="danger">删除</el-button>
@@ -51,49 +39,44 @@
           :total="total"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"/>
-      <el-dialog v-model="dialogVisible" title="Tips" width="30%">
+      <el-dialog v-model="dialogVisible" title="提示" width="50%">
         <el-form :model="form" label-width="120px">
-          <el-form-item label="书名">
-            <el-input v-model="form.name" style="width: 80%"></el-input>
+          <el-form-item label="标题">
+            <el-input v-model="form.title" style="width: 80%"></el-input>
           </el-form-item>
-          <el-form-item label="单价">
-            <el-input v-model="form.price" style="width: 80%"></el-input>
-          </el-form-item>
-          <el-form-item label="作者">
-            <el-input v-model="form.author" style="width: 80%"></el-input>
-          </el-form-item>
-          <el-form-item label="出版时间">
-           <el-date-picker v-model="form.createTime" value-format="YYYY-MM-DD" type="date" style="width: 80%" clearable></el-date-picker>
-          </el-form-item>
-          <el-form-item label="封面">
-            <el-upload ref="upload" action="http://localhost:9090/files/upload" :on-success="filesUploadSuccess">
-              <el-button type="primary">点击上传</el-button>
-              <template #tip>
-                <div class="el-upload__tip">
-                  jpg/png files with a size less than 500KB.
-                </div>
-              </template>
-            </el-upload>
-          </el-form-item>
+
+          <div id="div1"></div>
+<!--          <el-form-item label="内容">-->
+<!--            <el-input v-model="form.content" style="width: 80%"></el-input>-->
+<!--          </el-form-item>-->
         </el-form>
         <template #footer>
           <span class="dialog-footer">
-            <el-button @click="dialogVisible = false">Cancel</el-button>
-            <el-button type="primary" @click="save"
-            >Confirm</el-button
-            >
+            <el-button @click="dialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="save">确定</el-button>
           </span>
         </template>
       </el-dialog>
+
+      <el-dialog v-model="vis" title="详情" width="50%">
+        <el-card>
+          <div v-html="detail.content" style="min-height: 100px"></div>
+        </el-card>
+      </el-dialog>
+
+
     </div>
   </div>
 </template>
 
 <script>
-import request from "@/utils/request";
+import E from 'wangeditor'
+import request from "@/utils/request"
+
+let editor;
 
 export default {
-  name: 'Book',
+  name: 'News',
   components: {},
   data() {
     return {
@@ -103,19 +86,25 @@ export default {
       pageSize: 10,
       total: 10,
       search: '',
-      tableData: []
+      tableData: [],
+      vis: false, //控制弹窗开启关闭
+      detail: {}
     }
   },
   created() {
     this.load()
   },
   methods: {
+    details(row) {
+      this.detail = row
+      this.vis = true
+    },
     filesUploadSuccess(res) {
       console.log(res)
       this.form.cover = res.data
     },
     load() {
-      request.get("/book", {
+      request.get("/news", {
         params: {
           pageNum: this.currentPage,
           pageSize: this.pageSize,
@@ -128,8 +117,11 @@ export default {
       })
     },
     save() {
+      // console.log(editor.txt.html())
+      this.form.content = editor.txt.html() //获取编辑器里的值，然后赋予到form实体中
+
       if (this.form.id) { //更新
-        request.put("/book", this.form).then(res => {
+        request.put("/news", this.form).then(res => {
           console.log(res)
           if (res.code == '0') {
             this.$message({
@@ -146,7 +138,11 @@ export default {
           this.dialogVisible = false; //关闭弹窗
         })
       } else { //新增
-        request.post("/book", this.form).then(res => {
+        let userStr = sessionStorage.getItem("user") || "{}"
+        let user = JSON.parse(userStr)
+        this.form.author = user.nickName
+
+        request.post("/news", this.form).then(res => {
           console.log(res)
           if (res.code == '0') {
             this.$message({
@@ -168,18 +164,37 @@ export default {
       this.dialogVisible = true
       this.form = {}
 
-      if (this.$refs['upload']) {
-        this.$refs['upload'].clearFiles() //清除历史文件列表
-      }
+      this.$nextTick(() => { //弹窗和div是异步的，可能div先于弹窗创建
+        //关联弹窗里面的div，new一个editor对象
+        if (!editor) {
+          editor = new E('#div1')
+          // 配置 server 接口地址
+          editor.config.uploadImgServer = 'http://localhost:9090/files/editor/upload'
+          editor.config.uploadFileName = "file"  // 设置上传参数名称，因为上传会修改文件名
+
+          editor.create()
+        }
+      })
+
     },
     handleEdit(row) {
       this.form = JSON.parse(JSON.stringify(row))
       this.dialogVisible = true;
-      this.$nextTick(() => {
-        if (this.$refs['upload']) {
-          this.$refs['upload'].clearFiles() //清除历史文件列表
+
+      this.$nextTick(() => { //弹窗和div是异步的，可能div先于弹窗创建
+        //关联弹窗里面的div，new一个editor对象
+        if (!editor) {
+          editor = new E('#div1')
+
+          // 配置 server 接口地址
+          editor.config.uploadImgServer = 'http://localhost:9090/files/editor/upload'
+          editor.config.uploadFileName = "file"  //设置上传参数名称（与后台保持一致），因为上传会修改文件名
+
+          editor.create()
         }
+        editor.txt.html(row.content) //将行对象的content属性传入富文本编辑器
       })
+
     },
     handleSizeChange(pageSize) {
       this.pageSize = pageSize;
@@ -191,7 +206,7 @@ export default {
     },
     // handleDelete(id) {
     //   console.log(id)
-    //   request.delete("/book/" + id).then(res => {
+    //   request.delete("/news/" + id).then(res => {
     //     if (res.code == '0') {
     //       this.$message({
     //         type: "success",
@@ -208,7 +223,7 @@ export default {
     // },
     handleDelete(id) {
       console.log(id)
-      request.delete("/book/" + id).then(res => {
+      request.delete("/news/" + id).then(res => {
         if (res.code === '0') {
           this.$message({
             type: "success",

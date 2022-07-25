@@ -19,7 +19,13 @@
       <el-table-column prop="age" label="年龄"/>
       <el-table-column prop="sex" label="性别"/>
       <el-table-column prop="address" label="地址"/>
-      <el-table-column fixed="right" label="操作" width="150px">
+      <el-table-column label="角色">
+        <template #default="scope">
+          <span v-if="scope.row.role === 1">管理员</span>
+          <span v-if="scope.row.role === 2">普通用户</span>
+        </template>
+      </el-table-column>
+      <el-table-column fixed="right" label="操作" width="150">
         <template #default="scope">
           <el-button link type="text" size="mini" @click="handleEdit(scope.row)"
           >编辑
@@ -142,6 +148,8 @@ export default {
               message: res.msg
             })
           }
+          this.load(); //刷新表格数据
+          this.dialogVisible = false; //关闭弹窗
         })
       }
     },

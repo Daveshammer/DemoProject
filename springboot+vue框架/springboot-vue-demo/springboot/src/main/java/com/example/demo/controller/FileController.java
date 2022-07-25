@@ -4,12 +4,16 @@ package com.example.demo.controller;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSON;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import com.example.demo.common.Result;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
@@ -40,6 +44,35 @@ public class FileController {
 
         return Result.success(ip + ":" + port + "/files/" + flag); //返回结果 url
     }
+
+    /**
+     * 富文本上传接口
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    @PostMapping("/editor/upload")
+    public JSON editorUpload(MultipartFile file) throws IOException {
+        String originalFilename = file.getOriginalFilename(); //获取源文件的名称
+        //定义文件的唯一表示(前缀)
+        String flag = IdUtil.fastSimpleUUID();
+        String rootFilePath = System.getProperty("user.dir") + "/springboot/src/main/resources/files/" + flag + "_" + originalFilename; //获取上传路径
+        FileUtil.writeBytes(file.getBytes(), rootFilePath); //把文件写入到上传路径
+
+        String url = ip + ":" + port + "/files/" + flag;
+
+        JSONObject json = new JSONObject();
+        json.set("errno", 0);
+
+        JSONArray arr = new JSONArray();
+        JSONObject data = new JSONObject();
+        arr.add(data);
+        data.set("url", url);
+
+        json.set("data", arr);
+        return json;  // 返回结果 url
+    }
+
 
     /**
      * 下载接口
