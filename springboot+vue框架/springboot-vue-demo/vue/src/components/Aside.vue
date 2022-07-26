@@ -16,7 +16,7 @@
       <el-menu-item index="/book">
         <span>书籍管理</span>
       </el-menu-item>
-      <el-menu-item index="/news">
+      <el-menu-item index="/news" v-if="user.role === 2">
         <span>新闻管理</span>
       </el-menu-item>
 <!--      <el-menu-item index="2">-->
@@ -27,6 +27,8 @@
 </template>
 
 <script>
+import request from "@/utils/request";
+
 export default {
   name: "Aside",
   data() {
@@ -41,12 +43,12 @@ export default {
     let userStr = sessionStorage.getItem("user") || "{}"
     this.user = JSON.parse(userStr)
 
-    //请求服务端，确认当前用户为管理员
-    // request.get("/user" + this.user.id).then(res => {
-    //   if (res.code == '0') {
-    //     this.user = res.data
-    //   }
-    // })
+    // 请求服务端，确认当前用户为管理员
+    request.get("/user/" + this.user.id).then(res => {
+      if (res.code === '0') {
+        this.user = res.data
+      }
+    })
   }
 }
 </script>

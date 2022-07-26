@@ -2,9 +2,7 @@
   <div style="padding: 10px">
     <!--    功能区域-->
     <div style="margin: 10px">
-      <el-button type="primary" @click="add">新增</el-button>
-      <el-button type="primary">导入</el-button>
-      <el-button type="primary">导出</el-button>
+      <el-button type="primary" @click="add" v-if="user.role === 1">新增</el-button>
     </div>
 
     <!--    搜索区域-->
@@ -29,11 +27,8 @@
       </el-table-column>
       <el-table-column fixed="right" label="操作">
         <template #default="scope">
-          <el-button link type="text" size="mini" @click="handleEdit(scope.row)"
-          >编辑
-          </el-button
-          >
-          <el-popconfirm title="确认删除吗？" @confirm="handleDelete(scope.row.id)">
+          <el-button link type="text" size="mini" @click="handleEdit(scope.row)" v-if="scope.row.role === 1">编辑</el-button>
+          <el-popconfirm title="确认删除吗？" @confirm="handleDelete(scope.row.id)" v-if="scope.row.role === 1">
             <template #reference>
               <el-button size="mini" type="danger">删除</el-button>
             </template>
@@ -97,6 +92,7 @@ export default {
   components: {},
   data() {
     return {
+      user: {},
       form: {},
       dialogVisible: false,
       currentPage: 1,
@@ -107,6 +103,16 @@ export default {
     }
   },
   created() {
+    let userStr = sessionStorage.getItem("user") || "{}"
+    this.user = JSON.parse(userStr)
+
+    //请求服务端，确认当前用户为管理员
+    request.get("/user/" + this.user.id).then(res => {
+      if (res.code === '0') {
+        this.user = res.data
+      }
+    })
+
     this.load()
   },
   methods: {
